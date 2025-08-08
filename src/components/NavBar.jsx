@@ -1,6 +1,6 @@
 // filepath: e:\Cube\src\components\NavBar.jsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import logo from "../media/logo.png";
+import logo from "../media/Logo.png";
 
 /*
   Tailwind notes (add to tailwind.config.js):
