@@ -1,0 +1,42 @@
+<svg width="100%" height="100%" viewBox="0 0 14400 9000" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky -->
+  <rect width="14400" height="9000" fill="#f0eadd" />
+
+  <!-- Distant Mountains (10x detail) -->
+  <path d="M0 5000 Q3000 4000 6000 5000 T14400 5000 L14400 9000 L0 9000 Z" fill="#d9d2c3" />
+
+  <!-- Mid Mountains -->
+  <path d="M0 5300 Q4000 4300 8000 5300 T14400 5300 L14400 9000 L0 9000 Z" fill="#c9c2b3" />
+
+  <!-- Water Lake -->
+  <ellipse cx="7200" cy="7000" rx="5000" ry="800" fill="#c7dfe9" />
+
+  <!-- Hills and Grass -->
+  <path d="M0 6000 Q3000 5500 6000 6000 T14400 6000 L14400 9000 L0 9000 Z" fill="#c5d6bb" />
+  <path d="M0 6200 Q4000 5800 8000 6200 T14400 6200 L14400 9000 L0 9000 Z" fill="#b4ccaa" />
+
+  <!-- Bushes and Trees (Foreground) -->
+  <g fill="#5b845e">
+    <circle cx="2000" cy="7800" r="500" />
+    <circle cx="3000" cy="7900" r="400" />
+    <circle cx="6000" cy="7700" r="600" />
+    <circle cx="8500" cy="7800" r="550" />
+    <circle cx="11000" cy="7900" r="480" />
+  </g>
+
+  <!-- Tree trunks and tops -->
+  <g>
+    <rect x="1800" y="6400" width="100" height="400" fill="#423424" />
+    <circle cx="1850" cy="6400" r="300" fill="#4a704a" />
+
+    <rect x="12500" y="6600" width="120" height="500" fill="#423424" />
+    <circle cx="12560" cy="6500" r="350" fill="#4a704a" />
+  </g>
+
+  <!-- Bench -->
+  <g fill="#7f5d3b">
+    <rect x="7000" y="6700" width="800" height="100" />
+    <rect x="7100" y="6800" width="60" height="200" />
+    <rect x="7640" y="6800" width="60" height="200" />
+  </g>
+</svg>
