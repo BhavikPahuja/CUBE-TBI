@@ -1,19 +1,19 @@
 import React, { useState, useRef } from "react";
 import demoVideo from "../media/demo.mp4";
+import thumbnail from "../media/thumbnail.png";
 
 const CoverVideo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
 
   const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
     }
+    setIsPlaying(!isPlaying);
   };
 
   return (
@@ -21,8 +21,10 @@ const CoverVideo = () => {
       <video
         ref={videoRef}
         src={demoVideo}
+        poster={thumbnail} // thumbnail image
+        preload="metadata"
         className="w-full h-full object-cover"
-        controls={isPlaying} // Shows controls only when playing
+        controls={isPlaying} // show controls only when playing
         muted
         playsInline
         onPlay={() => setIsPlaying(true)}
@@ -36,6 +38,7 @@ const CoverVideo = () => {
           <button
             onClick={handlePlayPause}
             className="group relative flex items-center justify-center w-24 h-24 bg-white/10 backdrop-blur-md border-2 border-white/30 rounded-full hover:bg-white/20 hover:border-white/50 transition-all duration-300 hover:scale-110"
+            aria-label="Play video"
           >
             {/* Play Icon */}
             <svg
