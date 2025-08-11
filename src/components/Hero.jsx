@@ -31,13 +31,17 @@ const NEIGHBOR_RADIUS = 4; // how many frames on each side to prioritize
 const MAX_CONCURRENCY = 6; // parallel image loads
 const IDLE_BATCH = 8; // load this many per idle cycle (fallback to rAF)
 
+// Canvas pin thresholds
+const CANVAS_PIN_P = 0.99; // switch to sticky at ≥99%
+const CANVAS_UNPIN_P = 0.985; // switch back to fixed when <98.5% (hysteresis)
+
 export default function ScrollFrames() {
   const sectionRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const imagesRef = useRef(new Array(TOTAL_FRAMES)); // Image objects
+  const imagesRef = useRef(new Array(TOTAL_FRAMES));
   const statusRef = useRef(new Array(TOTAL_FRAMES).fill(0)); // 0=unqueued,1=loading,2=loaded
-  const queueRef = useRef([]); // indices waiting
+  const queueRef = useRef([]);
   const inFlightRef = useRef(0);
 
   const [loadedCount, setLoadedCount] = useState(0);
@@ -48,15 +52,18 @@ export default function ScrollFrames() {
   const [heroScale, setHeroScale] = useState(1);
 
   // Cover video UI state
-  const [videoActive, setVideoActive] = useState(false);
   const [videoOpacity, setVideoOpacity] = useState(0);
   const [videoScale, setVideoScale] = useState(VIDEO_START_SCALE);
 
-  // Frame selection state
-  const currentFrameRef = useRef(-1); // last drawn frame index
-  const targetFrameRef = useRef(0); // desired frame index from scroll
+  // Canvas position mode: 'fixed' (default) → 'sticky' only near the end
+  const [canvasPos, setCanvasPos] = useState("fixed");
+  const canvasPosRef = useRef("fixed");
 
-  // Track mounted state to avoid setState after unmount
+  // Frame selection state
+  const currentFrameRef = useRef(-1); // last drawn
+  const targetFrameRef = useRef(0); // desired from scroll
+
+  // Mounted guard
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -75,10 +82,7 @@ export default function ScrollFrames() {
   };
 
   const pumpQueue = () => {
-    while (
-      inFlightRef.current < MAX_CONCURRENCY &&
-      queueRef.current.length > 0
-    ) {
+    while (inFlightRef.current < MAX_CONCURRENCY && queueRef.current.length) {
       const idx = queueRef.current.shift();
       loadImage(idx);
     }
@@ -105,17 +109,15 @@ export default function ScrollFrames() {
     };
   };
 
-  // Initial eager load (first frame shown instantly)
+  // Initial eager + idle loading
   useEffect(() => {
     for (let i = 0; i < INITIAL_EAGER && i < TOTAL_FRAMES; i++) enqueue(i);
 
-    // Background idle loading (broad fill) – lower priority
     const rest = [];
     for (let i = INITIAL_EAGER; i < TOTAL_FRAMES; i++) rest.push(i);
 
     const idleLoad = () => {
-      if (!mountedRef.current) return;
-      if (!rest.length) return;
+      if (!mountedRef.current || rest.length === 0) return;
       const batch = rest.splice(0, IDLE_BATCH);
       batch.forEach(enqueue);
       if (rest.length) {
@@ -126,6 +128,7 @@ export default function ScrollFrames() {
         }
       }
     };
+
     if ("requestIdleCallback" in window) {
       window.requestIdleCallback(idleLoad, { timeout: 150 });
     } else {
@@ -133,7 +136,7 @@ export default function ScrollFrames() {
     }
   }, []);
 
-  // ---------- SCROLL → TARGET FRAME + UI FADES ----------
+  // ---------- SCROLL → FRAME + UI + CANVAS MODE ----------
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -154,14 +157,14 @@ export default function ScrollFrames() {
       const rawIndex = p * (TOTAL_FRAMES - 1);
       targetFrameRef.current = rawIndex;
 
-      // Prioritize neighbors around target frame
+      // Preload neighbors around target
       const center = Math.round(rawIndex);
       for (let d = 0; d <= NEIGHBOR_RADIUS; d++) {
         enqueue(center + d);
         enqueue(center - d);
       }
 
-      // Navbar fade only
+      // Navbar fade
       const nOp = p < NAV_FADE_END ? 1 - p / NAV_FADE_END : 0;
 
       // Hero opacity
@@ -180,39 +183,43 @@ export default function ScrollFrames() {
         scale = 1 - (1 - HERO_MIN_SCALE) * eased;
       }
 
-      // Cover video from frame 97 → end (only while section is in view)
+      // Cover video
       const inView = rect.bottom > 0 && rect.top < viewport;
       const videoStartP = VIDEO_START_FRAME / (TOTAL_FRAMES - 1);
-      const vt = clamp01((p - videoStartP) / (1 - videoStartP)); // 0..1 after start
-
-      // Scale path stays the same
+      const vt = clamp01((p - videoStartP) / (1 - videoStartP));
       const vScale =
         inView && p >= videoStartP
           ? lerp(VIDEO_START_SCALE, VIDEO_END_SCALE, vt)
           : VIDEO_START_SCALE;
 
-      // Opacity should reach 1 exactly when scale == 1 and stay full after.
-      // Solve for vt when scale==1 along the lerp path:
-      const vtFullRaw =
-        (1 - VIDEO_START_SCALE) / (VIDEO_END_SCALE - VIDEO_START_SCALE);
-      const vtFull = clamp01(vtFullRaw); // typically 0.5 for 1.5→0.5
-
-      const active = inView && p >= videoStartP;
+      const vtFull = clamp01(
+        (1 - VIDEO_START_SCALE) / (VIDEO_END_SCALE - VIDEO_START_SCALE)
+      );
       let vOpacity = 0;
-      if (active) {
-        if (vt <= vtFull) {
-          const t = vtFull > 1e-4 ? vt / vtFull : 1;
-          vOpacity = lerp(VIDEO_START_OPACITY, 1, t); // ramp up until scale==1
-        } else {
-          vOpacity = 1; // stay full after reaching 100% size
-        }
+      if (inView && p >= videoStartP) {
+        vOpacity =
+          vt <= vtFull
+            ? lerp(VIDEO_START_OPACITY, 1, vtFull > 1e-4 ? vt / vtFull : 1)
+            : 1;
+      }
+
+      // Canvas position mode: fixed until ~99%, then sticky
+      const wantSticky =
+        canvasPosRef.current === "sticky"
+          ? p >= CANVAS_UNPIN_P
+          : p >= CANVAS_PIN_P;
+      if (wantSticky && canvasPosRef.current !== "sticky") {
+        canvasPosRef.current = "sticky";
+        if (mountedRef.current) setCanvasPos("sticky");
+      } else if (!wantSticky && canvasPosRef.current !== "fixed") {
+        canvasPosRef.current = "fixed";
+        if (mountedRef.current) setCanvasPos("fixed");
       }
 
       if (mountedRef.current) {
         setNavOpacity((o) => (o !== nOp ? nOp : o));
         setHeroOpacity((o) => (o !== hOp ? hOp : o));
         setHeroScale((s) => (s !== scale ? scale : s));
-        setVideoActive((a) => (a === active ? a : active));
         setVideoOpacity((o) => (o !== vOpacity ? vOpacity : o));
         setVideoScale((s) => (s !== vScale ? vScale : s));
       }
@@ -255,7 +262,7 @@ export default function ScrollFrames() {
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      currentFrameRef.current = -1; // force redraw after resize
+      currentFrameRef.current = -1;
     };
     resize();
     window.addEventListener("resize", resize);
@@ -285,11 +292,9 @@ export default function ScrollFrames() {
       const pref = Math.max(0, Math.min(TOTAL_FRAMES - 1, preferred | 0));
       if (statusRef.current[pref] === 2) return pref;
 
-      // backward search
       for (let b = pref; b >= 0; b--) {
         if (statusRef.current[b] === 2) return b;
       }
-      // forward fallback
       for (let f = pref + 1; f < TOTAL_FRAMES; f++) {
         if (statusRef.current[f] === 2) return f;
       }
@@ -316,8 +321,11 @@ export default function ScrollFrames() {
   return (
     <div
       ref={sectionRef}
-      className="relative text-black"
-      style={{ height: "600vh" }}
+      className="text-black z-50"
+      style={{
+        position: "relative",
+        height: "400lvh",
+      }}
     >
       {/* Fixed navbar wrapper: fade only (no move/scale) */}
       <div
@@ -326,7 +334,7 @@ export default function ScrollFrames() {
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 200, // above hero (150) and loader (160)
+          zIndex: 200,
           opacity: navOpacity,
           transition: "opacity 0.18s linear",
           pointerEvents: navOpacity > 0 ? "auto" : "none",
@@ -335,26 +343,27 @@ export default function ScrollFrames() {
         <NavBar />
       </div>
 
-      {/* Fullscreen canvas behind content */}
+      {/* Canvas: fixed initially, becomes sticky only after 99% progress */}
       <canvas
         ref={canvasRef}
         style={{
-          position: "fixed",
-          inset: 0,
+          position: canvasPos === "sticky" ? "sticky" : "fixed",
+          top: 0,
+          left: 0,
           width: "100vw",
           height: "100vh",
           display: "block",
           background: "black",
-          zIndex: 1,
+          zIndex: 0,
           pointerEvents: "none",
         }}
       />
 
-      {/* Hero copy overlay (scales/fades; responsive spacing/typography) */}
+      {/* Hero copy overlay */}
       <div
         className="fixed inset-x-0 top-0 z-[150] flex flex-col items-center px-4 sm:px-6 pointer-events-none origin-center"
         style={{
-          paddingTop: "clamp(5rem, 8vw, 9rem)", // leaves room under the navbar on all screens
+          paddingTop: "clamp(5rem, 8vw, 9rem)",
           opacity: heroOpacity,
           transform: `scale(${heroScale})`,
           transition: "opacity 0.16s linear, transform 0.25s ease-out",
@@ -403,8 +412,8 @@ export default function ScrollFrames() {
         </div>
       </div>
 
-      {/* CoverVideo overlay (sticky inside section): appears at frame 97, scales 150% -> 50% */}
-      <div
+      {/* CoverVideo overlay */}
+      {/* <div
         className="fixed inset-0 z-[170] flex items-center justify-center"
         style={{
           opacity: videoOpacity,
@@ -426,7 +435,7 @@ export default function ScrollFrames() {
         >
           <CoverVideo />
         </div>
-      </div>
+      </div> */}
 
       {loadedCount < TOTAL_FRAMES && (
         <div

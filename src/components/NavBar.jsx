@@ -91,7 +91,7 @@ const NavBar = () => {
   );
 
   return (
-    <nav className="pointer-events-auto sticky top-0 left-0 right-0 z-[60] text-black">
+    <nav className="pointer-events-auto top-0 left-0 right-0 z-[60] text-black">
       <div className="h-[60px] relative shadow-[0_1px_0_0_transparent] transition-shadow duration-200">
         <div className="absolute inset-0 z-20 flex flex-row items-center justify-center px-8">
           {/* Left group */}
@@ -164,7 +164,7 @@ const NavBar = () => {
                 <div>
                   <button
                     disabled
-                    className="bg-[#fdfdf6] text-black text-xs font-semibold inline-flex gap-x-3 items-center justify-center rounded-[20px] cursor-pointer transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 atlas-web-mono shrink-0 h-10 px-6 gap-3 bg-meadow-700 text-meadow-50 hover:bg-meadow-700/90 disabled:bg-pebble-100 disabled:text-pebble-400 ring-offset-meadow-50 focus-visible:ring-meadow-700"
+                    className="bg-[#fdfdf6] border border-[#344c28] text-black text-xs font-semibold inline-flex gap-x-3 items-center justify-center rounded-[20px] cursor-pointer transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 atlas-web-mono shrink-0 h-10 px-6 gap-3 bg-meadow-700 text-meadow-50 hover:bg-meadow-700/90 disabled:bg-pebble-100 disabled:text-pebble-400 ring-offset-meadow-50 focus-visible:ring-meadow-700"
                   >
                     FOUNDER'S NOTE
                     <div className="-mr-3.5 ml-0.5 bg-[#e0e5d5] flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-pebble-200">

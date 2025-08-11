@@ -1,0 +1,86 @@
+/* basic layout */
+.footer-root {
+    position: relative;
+    background: linear-gradient(180deg, rgba(5,14,17,0) 0%, #050e11 100%);
+    color: rgb(var(--pebble-50));
+    overflow: clip;
+    min-width: 320px;
+  }
+  
+  /* Canvas layer styles */
+  .footer-root canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(8px);
+    mix-blend-mode: screen;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  /* stars & clouds (use your /images/footer-stars.png and footer-clouds.png) */
+  #home-footer-stars {
+    background-repeat: repeat;
+    background-position: center top;
+    background-size: contain;
+    z-index: 0;
+    opacity: 0.9;
+    transition: transform 0.5s ease;
+  }
+  
+  #home-footer-clouds-gradient {
+    z-index: 0;
+    opacity: 0.95;
+  }
+  
+  /* clouds moving */
+  @keyframes moveClouds {
+    from { transform: translateX(0); }
+    to { transform: translateX(-2000px); }
+  }
+  #home-footer-clouds-gradient { animation: moveClouds 80s linear infinite; }
+  
+  /* stars twinkle */
+  @keyframes twinkle {
+    0%,100% { opacity: 0.95; transform: translateY(0); }
+    50% { opacity: 0.6; transform: translateY(-6px); }
+  }
+  #home-footer-stars { animation: twinkle 10s ease-in-out infinite; }
+  
+  /* CTA section */
+  .footer-root .relative.flex.flex-col.items-center { z-index: 10; }
+  
+  /* product shot wrapper */
+  .border-t-[1px] {
+    border-top-width: 1px;
+    border-top-color: rgba(117,255,188,0.06);
+    backdrop-filter: blur(24px);
+  }
+  
+  /* dock images full-width styling */
+  .footer-root img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* floating dock images (the big dock at lower section) */
+  .footer-dock-anim {
+    display: none; /* only used to host GSAP images; the visual dock uses your markup above */
+  }
+  
+  /* inert debug style */
+  [inert] {
+    opacity: 0.999; /* leave visually same but block interactions */
+    pointer-events: none;
+    user-select: none;
+  }
+  
+  /* small helpers to keep layout safe if Tailwind classes missing in your build */
+  .text-pebble-50 { color: rgb(var(--pebble-50)); }
+  .atlas-web-lg { font-family: var(--font-akkurat), var(--font-sans); font-size: 1.25rem; }
+  
+  /* ensure canvas container has height so shader shows */
+  .absolute.top-0.h-\[90\%\].w-full { height: 60vh; min-height: 420px; }
+  

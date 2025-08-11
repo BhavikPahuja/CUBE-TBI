@@ -236,9 +236,20 @@
   z-index: 5;
 }
 
+/* hover child border color like [&:hover_li]:border-pebble-100 */
+.tablist:hover li {
+  border-color: rgb(var(--pebble-100));
+}
+
 /* color utilities */
 .text-pebble-300 {
   color: rgb(var(--pebble-300));
+}
+.text-pebble-50 {
+  color: rgb(var(--pebble-50));
+}
+.text-pebble-50\/60 {
+  color: rgba(var(--pebble-50), 0.6);
 }
 .text-pebble-400 {
   color: rgb(var(--pebble-400));
@@ -259,9 +270,34 @@
 .bg-pebble-900 {
   background-color: rgb(var(--pebble-900));
 }
+.bg-meadow-50 {
+  background-color: rgb(var(--meadow-50));
+}
+.text-meadow-900 {
+  color: rgb(var(--meadow-900));
+}
 
 .border-pebble-200 {
   border-color: rgb(var(--pebble-200));
+}
+
+/* top border color utility used in figures */
+.border-t-pebble-300 {
+  border-top-color: rgb(var(--pebble-300));
+}
+
+/* blend helpers */
+.mix-blend-screen {
+  mix-blend-mode: screen;
+}
+.mix-blend-plus-lighter {
+  mix-blend-mode: plus-lighter;
+}
+
+/* selection helpers for footer root */
+.footer-root::selection,
+.footer-root *::selection {
+  background-color: rgba(var(--pebble-50), 0.2);
 }
 
 /* gradient overlay exactly like snippet */
@@ -272,10 +308,13 @@
     rgba(0, 0, 0, 0) 50%
   );
 }
+/* marker classes so the composed selector above matches */
 .from-40\% {
-} /* marker class so the selector above matches */
+  content: "";
+}
 .to-50\% {
-} /* marker class so the selector above matches */
+  content: "";
+}
 
 /* typography */
 .atlas-web-sm {
@@ -302,5 +341,59 @@
 
 /* generic text helper used in markup */
 .text-pretty {
-  text-wrap: pretty;
+  /* Fallback for browsers without text-wrap: pretty */
+  overflow-wrap: anywhere;
+}
+
+/* smooth content switch animations */
+.fade-in-up-slow {
+  animation: fade-in-up 700ms var(--ease-in-out) both;
+}
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* smooth expanding/collapsing answer */
+.smooth-accordion {
+  overflow: hidden;
+  transition: max-height 650ms var(--ease-in-out),
+    opacity 650ms var(--ease-in-out);
+  will-change: max-height, opacity;
+}
+.smooth-accordion--open {
+  max-height: 500px; /* sufficiently large to show content */
+  opacity: 1;
+}
+.smooth-accordion--closed {
+  max-height: 0px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* utility for subtle color transitions if needed */
+.transition-color {
+  transition: color 300ms var(--ease-in-out);
+}
+
+/* active tab icon spins */
+.spin-linear-20 {
+  animation: spin 20s linear infinite;
+  will-change: transform;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* smooth progress fill */
+.progress-fill {
+  transition: width 500ms var(--ease-in-out);
 }
