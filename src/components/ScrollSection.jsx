@@ -1,7 +1,11 @@
 import React from "react";
-import "./scroll-section.css";
+import "./components.css";
 import NavBar from "./NavBar.jsx";
 import { useState, useEffect, useRef } from "react";
+import scrl1Img from "../media/Scroll-1.avif";
+import scrl2Img from "../media/Scroll-2.avif";
+import scrl3Img from "../media/Scroll-3.avif";
+import scrl4Img from "../media/Scroll-4.avif";
 
 export default function ScrollSection() {
   const sectionRef = useRef(null);
@@ -13,7 +17,7 @@ export default function ScrollSection() {
 
   const content = [
     {
-      tab: "Iterate",
+      tab: "Founders",
       num: "01",
       heading: "Prompt engineering that feels like magic",
       content:
@@ -28,7 +32,7 @@ export default function ScrollSection() {
       },
     },
     {
-      tab: "Evaluate",
+      tab: "Community",
       num: "02",
       heading: "AI-powered testing that writes itself",
       content:
@@ -43,22 +47,22 @@ export default function ScrollSection() {
       },
     },
     {
-      tab: "Deploy",
+      tab: "Resources ",
       num: "03",
       heading: "Ship AI with unshakeable confidence",
       content:
         "Push to any environment with built-in controls, smart diffing, instant rollbacks, and drop-in integration that fits your existing codebase.",
       info: {
-        q1: "Multi-environment deployments",
+        q1: "Multi-environment Resources  ments",
         a1: "Manage the entire lifecycle from development to production with environment-specific configurations that ensure smooth transitions between stages.",
         q2: "Smart diffing across versions",
-        a2: "Understand exactly what changed between deployments with intelligent diffing that highlights modifications to prompts, models, and configuration settings.",
+        a2: "Understand exactly what changed between Resources  ments with intelligent diffing that highlights modifications to prompts, models, and configuration settings.",
         q3: "Instant rollbacks",
         a3: "Recover from issues in seconds with one-click rollbacks that restore previous configurations, keeping your AI services reliable and your users happy.",
       },
     },
     {
-      tab: "Monitor",
+      tab: "Capital",
       num: "04",
       heading: "Turn production data into a competitive edge",
       content:
@@ -69,7 +73,7 @@ export default function ScrollSection() {
         q2: "Continuous evaluations",
         a2: "Automatically test your production AI against benchmark datasets and real-time inputs, ensuring performance remains consistent as user patterns and data distributions evolve.",
         q3: "Human annotations",
-        a3: "Enrich your training and evaluation datasets with human feedback collected directly from your monitoring interface, creating a virtuous cycle of continuous improvement.",
+        a3: "Enrich your training and evaluation datasets with human feedback collected directly from your Capitaling interface, creating a virtuous cycle of continuous improvement.",
       },
     },
   ];
@@ -111,7 +115,7 @@ export default function ScrollSection() {
     if (!el) return;
     const sectionTop = el.getBoundingClientRect().top + window.scrollY;
     const totalScrollable = Math.max(el.offsetHeight - window.innerHeight, 0);
-    const targetProgress = (idx * 3) / 12; // start of that section (3 parts each)
+    const targetProgress = (idx * 3 + 1 / 2) / 12; // start of that section (3 parts each)
     const targetScroll = sectionTop + totalScrollable * targetProgress;
     window.scrollTo({ top: targetScroll, behavior: "smooth" });
   };
@@ -120,16 +124,36 @@ export default function ScrollSection() {
   const qs = [part.info.q1, part.info.q2, part.info.q3];
   const as = [part.info.a1, part.info.a2, part.info.a3];
 
+  // Compute per-section local progress t in [0,1] for a given section index i (0..3)
+  const sectionT = (i) => {
+    const start = i / 4;
+    const span = 1 / 4;
+    const t = (scrollProgress - start) / span;
+    return Math.max(0, Math.min(1, t));
+  };
+
+  // Right pane images and continuous scroll offset (no fading)
+  const images = [scrl1Img, scrl2Img, scrl3Img, scrl4Img];
+  // Move one full viewport per section; clamp so the last image stays in view at the end
+  const offsetIndex = Math.max(
+    0,
+    Math.min(images.length - 1, scrollProgress * images.length)
+  );
+  const offsetVh = offsetIndex * 100; // in vh units
+
   return (
     <section
       ref={sectionRef}
       className="relative flex w-full"
       style={{ height: "1200lvh" }}
     >
-      <div className="px-grid-margin pointer-events-none fixed top-0 h-lvh w-full pt-[var(--nav-height)] overflow-hidden">
+      <div
+        className="px-grid-margin pointer-events-none fixed top-0 h-lvh w-full pt-[90px] overflow-hidden"
+        style={{ zIndex: 100 }}
+      >
         {/* Pinned navbar inside the section for its full duration */}
         <div
-          className="absolute top-0 left-0 right-0"
+          className="absolute top-0 left-0 right-0 bg-[#fdfdf6] border border-transparent border-b-[#0a1d08]/20 shadow-sm"
           style={{ zIndex: "var(--nav-z-index)" }}
         >
           <NavBar />
@@ -145,7 +169,7 @@ export default function ScrollSection() {
               <li
                 className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer text-black hover:!border-pebble-300 hover:text-black"
                 role="tab"
-                aria-label="Iterate"
+                aria-label="Founders"
                 aria-selected={partIndex === 0}
                 id="tab-:r0:-0"
                 aria-controls="tabpanel-:r0:-0"
@@ -207,7 +231,7 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Iterate</div>
+                      <div className="atlas-web-sm">Founders</div>
                       {partIndex === 0 && (
                         <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
@@ -258,7 +282,7 @@ export default function ScrollSection() {
               <li
                 className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer hover:!border-pebble-300 hover:text-black"
                 role="tab"
-                aria-label="Evaluate"
+                aria-label="Community"
                 aria-selected={partIndex === 1}
                 id="tab-:r0:-1"
                 aria-controls="tabpanel-:r0:-1"
@@ -306,7 +330,7 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Evaluate</div>
+                      <div className="atlas-web-sm">Community</div>
                       {partIndex === 1 && (
                         <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
@@ -357,7 +381,7 @@ export default function ScrollSection() {
               <li
                 className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer hover:!border-pebble-300 hover:text-black"
                 role="tab"
-                aria-label="Deploy"
+                aria-label="Resources "
                 aria-selected={partIndex === 2}
                 id="tab-:r0:-2"
                 aria-controls="tabpanel-:r0:-2"
@@ -402,7 +426,7 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Deploy</div>
+                      <div className="atlas-web-sm">Resources </div>
                       {partIndex === 2 && (
                         <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
@@ -453,7 +477,7 @@ export default function ScrollSection() {
               <li
                 className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer hover:!border-pebble-300 hover:text-black"
                 role="tab"
-                aria-label="Monitor"
+                aria-label="Capital"
                 aria-selected={partIndex === 3}
                 id="tab-:r0:-3"
                 aria-controls="tabpanel-:r0:-3"
@@ -515,7 +539,7 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Monitor</div>
+                      <div className="atlas-web-sm">Capital</div>
                       {partIndex === 3 && (
                         <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
@@ -563,7 +587,7 @@ export default function ScrollSection() {
               </li>
             </ul>
 
-            <aside className="bg-pebble-100 pointer-events-auto hidden h-10 items-center gap-4 overflow-clip rounded-[8px] pl-4 pr-2 lg:flex">
+            <aside className="bg-pebble-100 pointer-events-auto hidden h-10 items-center gap-4 overflow-clip rounded-[8px] pl-4 pr-2 lg:flex relative z-10">
               <p className="atlas-web-sm pointer-events-none cursor-default">
                 Learn more
               </p>
@@ -595,19 +619,19 @@ export default function ScrollSection() {
               aria-labelledby="tab-:r0:-0"
               id="tabpanel-:r0:-0"
               aria-hidden="false"
-              className="absolute left-0 top-0 bottom-6 flex flex-col justify-between"
+              className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[#0a1d08]"
               style={{ opacity: 1, visibility: "visible" }}
             >
               <div className="pointer-events-auto flex max-w-[500px] flex-col gap-2 pt-0">
                 <h2
                   key={`h2-${partIndex}`}
-                  className="atlas-web-base 2xl:atlas-web-md text-pretty 2xl:mb-4 fade-in-up-slow"
+                  className="atlas-web-base text-pretty fade-in-up-slow text-3xl"
                 >
                   {part.heading}
                 </h2>
                 <p
                   key={`p-${partIndex}`}
-                  className="text-pretty fade-in-up-slow"
+                  className="text-pretty fade-in-up-slow text-xl"
                   style={{ animationDelay: "120ms" }}
                 >
                   {part.content}
@@ -656,6 +680,42 @@ export default function ScrollSection() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* RIGHT IMAGE PANE: continuous vertical scroll (no fade), each image covers one section */}
+      <div
+        className="pointer-events-none fixed right-0 top-0 flex h-lvh w-[42vw] max-w-[680px] items-center justify-center pr-[var(--grid-margin)] overflow-hidden"
+        aria-hidden="true"
+        style={{ zIndex: 1 }}
+      >
+        <div className="relative h-lvh w-full">
+          <div
+            className="absolute left-0 top-0 w-full"
+            style={{
+              height: `${images.length * 100}vh`,
+              transform: `translateY(-${offsetVh}vh)`,
+              willChange: "transform",
+            }}
+          >
+            {images.map((src, i) => (
+              <div
+                key={i}
+                className="flex h-lvh w-full items-center justify-center"
+              >
+                <img
+                  src={src}
+                  alt={`Section visual ${i + 1}`}
+                  className="max-h-[70vh] w-auto object-contain drop-shadow-xl"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Background document flow can remain empty since visuals are fixed */}
+      <div className="invisible" aria-hidden="true">
+        {/* ...kept for layout fallback, no visual output needed */}
       </div>
     </section>
   );

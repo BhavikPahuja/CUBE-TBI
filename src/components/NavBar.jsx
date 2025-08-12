@@ -92,7 +92,7 @@ const NavBar = () => {
 
   return (
     <nav className="pointer-events-auto top-0 left-0 right-0 z-[60] text-black">
-      <div className="h-[60px] relative shadow-[0_1px_0_0_transparent] transition-shadow duration-200">
+      <div className="h-[75px] relative shadow-[0_1px_0_0_transparent] transition-shadow duration-200">
         <div className="absolute inset-0 z-20 flex flex-row items-center justify-center px-8">
           {/* Left group */}
           <div className="flex flex-1 items-center gap-10 lg:gap-12">

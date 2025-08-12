@@ -321,7 +321,7 @@ export default function ScrollFrames() {
   return (
     <div
       ref={sectionRef}
-      className="text-black z-50"
+      className="text-black z-200"
       style={{
         position: "relative",
         height: "400lvh",
@@ -342,7 +342,6 @@ export default function ScrollFrames() {
       >
         <NavBar />
       </div>
-
       {/* Canvas: fixed initially, becomes sticky only after 99% progress */}
       <canvas
         ref={canvasRef}
@@ -358,7 +357,6 @@ export default function ScrollFrames() {
           pointerEvents: "none",
         }}
       />
-
       {/* Hero copy overlay */}
       <div
         className="fixed inset-x-0 top-0 z-[150] flex flex-col items-center px-4 sm:px-6 pointer-events-none origin-center"
@@ -411,8 +409,7 @@ export default function ScrollFrames() {
           </div>
         </div>
       </div>
-
-      {/* CoverVideo overlay */}
+      CoverVideo overlay
       {/* <div
         className="fixed inset-0 z-[170] flex items-center justify-center"
         style={{
@@ -436,7 +433,6 @@ export default function ScrollFrames() {
           <CoverVideo />
         </div>
       </div> */}
-
       {loadedCount < TOTAL_FRAMES && (
         <div
           style={{

@@ -1,0 +1,396 @@
+:root {
+  /* tokens (exact copy) */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  --color-red-500: oklch(63.7% 0.237 25.331);
+  --color-gray-400: oklch(70.7% 0.022 261.325);
+  --color-black: #000;
+  --color-white: #fff;
+  --spacing: 0.25rem;
+  --container-2xl: 42rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --tracking-normal: 0em;
+  --tracking-wider: 0.05em;
+  --radius-xl: 0.75rem;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --perspective-dramatic: 100px;
+  --perspective-distant: 1200px;
+  --aspect-video: 16/9;
+  --default-transition-duration: 0.15s;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+
+  --pebble-50: 251 253 246;
+  --pebble-100: 239 242 232;
+  --pebble-200: 224 229 213;
+  --pebble-300: 197 204 182;
+  --pebble-400: 151 161 134;
+  --pebble-500: 107 120 96;
+  --pebble-600: 80 92 71;
+  --pebble-700: 46 59 40;
+  --pebble-800: 25 41 21;
+  --pebble-900: 10 29 8;
+  --pebble-950: 5 22 4;
+
+  --meadow-50: 251 253 246;
+  --meadow-100: 236 242 223;
+  --meadow-200: 215 232 181;
+  --meadow-300: 177 204 122;
+  --meadow-400: 137 175 84;
+  --meadow-500: 99 143 61;
+  --meadow-600: 59 92 35;
+  --meadow-700: 32 59 20;
+  --meadow-800: 19 41 14;
+  --meadow-900: 10 29 8;
+  --meadow-950: 5 22 4;
+
+  --terracotta-50: 255 249 247;
+  --terracotta-100: 250 240 235;
+  --terracotta-200: 249 217 201;
+  --terracotta-300: 245 169 137;
+  --terracotta-400: 232 127 95;
+  --terracotta-500: 194 76 52;
+  --terracotta-600: 133 54 38;
+  --terracotta-700: 83 35 26;
+  --terracotta-800: 56 23 16;
+  --terracotta-900: 39 17 13;
+  --terracotta-950: 29 14 11;
+
+  --desert-50: 252 249 242;
+  --desert-100: 251 242 226;
+  --desert-200: 247 222 181;
+  --desert-300: 237 194 126;
+  --desert-400: 209 158 75;
+  --desert-500: 180 125 36;
+  --desert-600: 128 88 28;
+  --desert-700: 74 50 18;
+  --desert-800: 49 32 11;
+  --desert-900: 35 23 9;
+  --desert-950: 27 18 8;
+
+  --azure-50: 240 250 250;
+  --azure-100: 225 244 245;
+  --azure-200: 192 231 240;
+  --azure-300: 146 212 233;
+  --azure-400: 110 191 220;
+  --azure-500: 58 148 186;
+  --azure-600: 36 90 120;
+  --azure-700: 22 54 74;
+  --azure-800: 18 36 49;
+  --azure-900: 13 27 38;
+  --azure-950: 11 22 31;
+
+  --radius: 0.5rem;
+  --grid-max-width: 2048px;
+  --color-surface-highest: #fdfefb;
+  --color-surface-high: #fafbf7;
+  --color-surface-base: #f8f9f5;
+  --color-surface-low: #f1f3ef;
+  --color-surface-lowest: #e9ede9;
+  --color-surface-highest-transparent: #fdfefb00;
+  --color-surface-high-transparent: #fafbf700;
+  --color-surface-base-transparent: #f8f9f500;
+  --color-surface-low-transparent: #f1f3ef00;
+  --color-surface-lowest-transparent: #e9ede900;
+
+  --color-on-surface-highest: #2b390a;
+  --color-on-surface-highest-subtle: #2b390ab3;
+  --color-on-surface-highest-disabled: #2b390a66;
+  --color-on-surface-high: #2f3f1b;
+  --color-on-surface-high-subtle: #2f3f1bb3;
+  --color-on-surface-high-disabled: #2f3f1b66;
+  --color-on-surface-base: #2e4320;
+  --color-on-surface-base-subtle: #2e4320b3;
+  --color-on-surface-base-disabled: #2e432066;
+  --color-on-surface-low: #243b1b;
+  --color-on-surface-low-subtle: #243b1bb3;
+  --color-on-surface-low-disabled: #243b1b66;
+  --color-on-surface-lowest: #123b0e;
+  --color-on-surface-lowest-subtle: #123b0eb3;
+  --color-on-surface-lowest-disabled: #123b0e66;
+
+  --color-surface-tint-mild: #344f3108;
+  --color-surface-tint-base: #344f3112;
+  --color-surface-tint-strong: #33503024;
+
+  --color-inverse-surface: #2a332a;
+  --color-inverse-on-surface: #fdfefb;
+  --color-inverse-on-surface-subtle: #fdfefbb3;
+  --color-inverse-on-surface-disabled: #fdfefb66;
+
+  --color-primary: #4a6d47;
+  --color-on-primary: #eef6dc;
+  --color-primary-container: #ddeabd;
+  --color-on-primary-container: #4a6d47;
+  --color-primary-stroke: #548f28;
+
+  --color-secondary: #2b6b5e;
+  --color-on-secondary: #eff6f2;
+  --color-secondary-container: #e3f2ea;
+  --color-on-secondary-container: #234b43;
+  --color-secondary-stroke: #0f9397;
+
+  --color-tertiary: #b14eaa;
+  --color-on-tertiary: #feebfb;
+  --color-tertiary-container: #feebfb;
+  --color-on-tertiary-container: #b14eaa;
+  --color-tertiary-stroke: #d857cf;
+
+  --color-error: #991e4b;
+  --color-on-error: #fcf0f3;
+  --color-error-container: #fbd8e5;
+  --color-on-error-container: #92174a;
+  --color-error-stroke: #d41665;
+
+  --color-outline: #e1e6df;
+  --color-outline-strong: #c4cbc2;
+
+  --color-aux-accent-1: #cf2184;
+  --color-aux-accent-1-outline: #ebabcf;
+  --color-aux-accent-1-container: #feebf1;
+  --color-aux-accent-2: #c23934;
+  --color-aux-accent-2-outline: #e9c3c1;
+  --color-aux-accent-2-container: #feebeb;
+  --color-aux-accent-3: #b54c1f;
+  --color-aux-accent-3-outline: #f1c8b6;
+  --color-aux-accent-3-container: #fff0e5;
+  --color-aux-accent-4: #886a00;
+  --color-aux-accent-4-outline: #ebd587;
+  --color-aux-accent-4-container: #f9f2d9;
+  --color-aux-accent-5: #4a6d47;
+  --color-aux-accent-5-outline: #bed0bd;
+  --color-aux-accent-5-container: #f0f5df;
+  --color-aux-accent-6: #2d784d;
+  --color-aux-accent-6-outline: #b9d3c4;
+  --color-aux-accent-6-container: #e4f7ea;
+  --color-aux-accent-7: #1a7474;
+  --color-aux-accent-7-outline: #bed7d7;
+  --color-aux-accent-7-container: #e8f5f5;
+  --color-aux-accent-8: #3963b7;
+  --color-aux-accent-8-outline: #c2d8ec;
+  --color-aux-accent-8-container: #e3f6ff;
+  --color-aux-accent-9: #7e42a6;
+  --color-aux-accent-9-outline: #dbcbe6;
+  --color-aux-accent-9-container: #f0edff;
+  --color-aux-accent-10: #9c2fa6;
+  --color-aux-accent-10-outline: #efd7f1;
+  --color-aux-accent-10-container: #ffebff;
+
+  --size-baseline: 21px;
+  --size-baseline-sm: 17px;
+  --size-form-2xs: 20px;
+  --size-form-xs: 24px;
+  --size-form-sm: 28px;
+  --size-form-md: 32px;
+  --size-form-lg: 40px;
+
+  --product-marketing-background: #dde4de;
+  --grid-margin: 48px;
+  --grid-gutter: 24px;
+  --nav-height: 64px;
+
+  --font-akkurat: "akkurat", "akkurat Fallback";
+  --font-fragment-mono: "fragmentMono", "fragmentMono Fallback", fragmentMono,
+    SFMono-Regular, SF Mono, JetBrains Mono, Fira Code, Cascadia Code,
+    Source Code Pro, ui-monospace, Menlo, Monaco, Consolas, Liberation Mono,
+    Courier New, monospace;
+
+  --nav-z-index: 20;
+}
+
+/* helpers that Tailwind doesn't provide in your setup */
+.px-grid-margin {
+  padding-left: var(--grid-margin);
+  padding-right: var(--grid-margin);
+}
+.max-w-grid {
+  max-width: var(--grid-max-width);
+}
+.h-lvh {
+  height: 100lvh;
+  height: 100vh;
+}
+.size-12 {
+  width: 3rem;
+  height: 3rem;
+}
+.size-6 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.z-5 {
+  z-index: 5;
+}
+
+/* hover child border color like [&:hover_li]:border-pebble-100 */
+.tablist:hover li {
+  border-color: rgb(var(--pebble-100));
+}
+
+/* color utilities */
+.text-pebble-300 {
+  color: rgb(var(--pebble-300));
+}
+.text-pebble-50 {
+  color: rgb(var(--pebble-50));
+}
+.text-pebble-50\/60 {
+  color: rgba(var(--pebble-50), 0.6);
+}
+.text-pebble-400 {
+  color: rgb(var(--pebble-400));
+}
+.text-pebble-500 {
+  color: rgb(var(--pebble-500));
+}
+.text-pebble-900 {
+  color: rgb(var(--pebble-900));
+}
+
+.bg-pebble-100 {
+  background-color: rgb(var(--pebble-100));
+}
+.bg-pebble-300 {
+  background-color: rgb(var(--pebble-300));
+}
+.bg-pebble-900 {
+  background-color: rgb(var(--pebble-900));
+}
+.bg-meadow-50 {
+  background-color: rgb(var(--meadow-50));
+}
+.text-meadow-900 {
+  color: rgb(var(--meadow-900));
+}
+
+.border-pebble-200 {
+  border-color: rgb(var(--pebble-200));
+}
+
+/* top border color utility used in figures */
+.border-t-pebble-300 {
+  border-top-color: rgb(var(--pebble-300));
+}
+
+/* blend helpers */
+.mix-blend-screen {
+  mix-blend-mode: screen;
+}
+.mix-blend-plus-lighter {
+  mix-blend-mode: plus-lighter;
+}
+
+/* selection helpers for footer root */
+.footer-root::selection,
+.footer-root *::selection {
+  background-color: rgba(var(--pebble-50), 0.2);
+}
+
+/* gradient overlay exactly like snippet */
+.bg-gradient-to-r.from-meadow-50.to-transparent {
+  background-image: linear-gradient(
+    to right,
+    rgba(var(--meadow-50), 1) 40%,
+    rgba(0, 0, 0, 0) 50%
+  );
+}
+/* marker classes so the composed selector above matches */
+.from-40\% {
+  content: "";
+}
+.to-50\% {
+  content: "";
+}
+
+/* typography */
+.atlas-web-sm {
+  font-family: var(--font-akkurat), var(--font-sans);
+  line-height: calc(1.25 / 0.875);
+  font-weight: var(--font-weight-medium);
+}
+.atlas-web-base {
+  font-family: var(--font-akkurat), var(--font-sans);
+  line-height: 1.5;
+  font-weight: var(--font-weight-semibold);
+}
+.atlas-web-md {
+  font-family: var(--font-akkurat), var(--font-sans);
+  line-height: 1.6;
+  font-weight: var(--font-weight-semibold);
+}
+.atlas-web-mono {
+  font-family: var(--font-fragment-mono);
+}
+
+/* generic text helper used in markup */
+.text-pretty {
+  /* Fallback for browsers without text-wrap: pretty */
+  overflow-wrap: anywhere;
+}
+
+/* smooth content switch animations */
+.fade-in-up-slow {
+  animation: fade-in-up 700ms var(--ease-in-out) both;
+}
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* smooth expanding/collapsing answer */
+.smooth-accordion {
+  overflow: hidden;
+  transition: max-height 650ms var(--ease-in-out),
+    opacity 650ms var(--ease-in-out);
+  will-change: max-height, opacity;
+}
+.smooth-accordion--open {
+  max-height: 500px; /* sufficiently large to show content */
+  opacity: 1;
+}
+.smooth-accordion--closed {
+  max-height: 0px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* utility for subtle color transitions if needed */
+.transition-color {
+  transition: color 300ms var(--ease-in-out);
+}
+
+/* active tab icon spins */
+.spin-linear-20 {
+  animation: spin 20s linear infinite;
+  will-change: transform;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* smooth progress fill */
+.progress-fill {
+  transition: width 500ms var(--ease-in-out);
+}
