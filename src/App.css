@@ -10,7 +10,7 @@ body {
   text-rendering: optimizeSpeed; /* Optimize for high DPI displays */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #000; /* Set a black background */
+  background-color: #fdfdf6; /* Set a black background */
 }
 
 @keyframes rotate-border {

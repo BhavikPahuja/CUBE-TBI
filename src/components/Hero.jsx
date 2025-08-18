@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import NavBar from "./NavBar";
 import CoverVideo from "./CoverVideo";
+import { log } from "three/tsl";
 
 /*
 Goals:
@@ -34,6 +35,10 @@ const IDLE_BATCH = 8; // load this many per idle cycle (fallback to rAF)
 // Canvas pin thresholds
 const CANVAS_PIN_P = 0.99; // switch to sticky at ≥99%
 const CANVAS_UNPIN_P = 0.985; // switch back to fixed when <98.5% (hysteresis)
+// Canvas slide-up window: make it longer and feel slower
+const CANVAS_SLIDE_START = 0.9; // was 0.75
+const CANVAS_SLIDE_END = 1.0; // was 0.99
+const CANVAS_SLIDE_DISTANCE_VH = 110; // slide up by ~110vh to ensure fully out of view
 
 export default function ScrollFrames() {
   const sectionRef = useRef(null);
@@ -58,6 +63,17 @@ export default function ScrollFrames() {
   // Canvas position mode: 'fixed' (default) → 'sticky' only near the end
   const [canvasPos, setCanvasPos] = useState("fixed");
   const canvasPosRef = useRef("fixed");
+  // Canvas slide-up translateY (in vh)
+  const [canvasSlideVh, setCanvasSlideVh] = useState(0);
+  // New: canvas scale and corner radius during end animation
+  const [canvasScale, setCanvasScale] = useState(1);
+  const [canvasRadius, setCanvasRadius] = useState(0);
+
+  // Overlay (hero copy) position: 'fixed' (default) → 'sticky' near the end
+  const [overlayPos, setOverlayPos] = useState("fixed");
+  const overlayPosRef = useRef("fixed");
+  // New: overlay end-animation scale factor (1 → 0.8)
+  const [overlayScaleFactor, setOverlayScaleFactor] = useState(1);
 
   // Frame selection state
   const currentFrameRef = useRef(-1); // last drawn
@@ -136,7 +152,7 @@ export default function ScrollFrames() {
     }
   }, []);
 
-  // ---------- SCROLL → FRAME + UI + CANVAS MODE ----------
+  // ---------- SCROLL → FRAME + UI + CANVAS/OVERLAY MODE ----------
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -204,17 +220,57 @@ export default function ScrollFrames() {
       }
 
       // Canvas position mode: fixed until ~99%, then sticky
-      const wantSticky =
+      const wantStickyCanvas =
         canvasPosRef.current === "sticky"
           ? p >= CANVAS_UNPIN_P
           : p >= CANVAS_PIN_P;
-      if (wantSticky && canvasPosRef.current !== "sticky") {
+      if (wantStickyCanvas && canvasPosRef.current !== "sticky") {
         canvasPosRef.current = "sticky";
         if (mountedRef.current) setCanvasPos("sticky");
-      } else if (!wantSticky && canvasPosRef.current !== "fixed") {
+      } else if (!wantStickyCanvas && canvasPosRef.current !== "fixed") {
         canvasPosRef.current = "fixed";
         if (mountedRef.current) setCanvasPos("fixed");
       }
+
+      // Overlay (hero copy) mode: fixed until ~99%, then sticky to scroll upward
+      const wantStickyOverlay =
+        overlayPosRef.current === "sticky"
+          ? p >= CANVAS_UNPIN_P
+          : p >= CANVAS_PIN_P;
+      if (wantStickyOverlay && overlayPosRef.current !== "sticky") {
+        overlayPosRef.current = "sticky";
+        if (mountedRef.current) setOverlayPos("sticky");
+      } else if (!wantStickyOverlay && overlayPosRef.current !== "fixed") {
+        overlayPosRef.current = "fixed";
+        if (mountedRef.current) setOverlayPos("fixed");
+      }
+
+      // Canvas slide-up translate between start → end (longer, slower)
+      let slideVh = 0;
+      let slideT = 0; // normalized progress 0..1 across the end animation
+      if (p >= CANVAS_SLIDE_START) {
+        const denom = Math.max(1e-6, CANVAS_SLIDE_END - CANVAS_SLIDE_START);
+        const t = clamp01((p - CANVAS_SLIDE_START) / denom);
+        // easeInOutSine for smoother, less extreme speed changes across the window
+        const eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
+        slideT = eased;
+        slideVh = -CANVAS_SLIDE_DISTANCE_VH * eased;
+      }
+
+      // Publish end animation progress for other sections via CSS var
+      if (typeof document !== "undefined") {
+        document.documentElement.style.setProperty(
+          "--hero-end-t",
+          String(slideT)
+        );
+      }
+
+      // Derive canvas scale (to 80%) and rounded corners over the same window
+      const cScale = 1 - 0.2 * slideT; // 1 → 0.8
+      const cRadius = Math.round(24 * slideT); // 0px → 24px
+
+      // Overlay should also shrink to 80% of its current scale during this window
+      const oScaleFactor = 1 - 0.2 * slideT; // 1 → 0.8
 
       if (mountedRef.current) {
         setNavOpacity((o) => (o !== nOp ? nOp : o));
@@ -222,6 +278,10 @@ export default function ScrollFrames() {
         setHeroScale((s) => (s !== scale ? scale : s));
         setVideoOpacity((o) => (o !== vOpacity ? vOpacity : o));
         setVideoScale((s) => (s !== vScale ? vScale : s));
+        setCanvasSlideVh((v) => (v !== slideVh ? slideVh : v));
+        setCanvasScale((v) => (v !== cScale ? cScale : v));
+        setCanvasRadius((v) => (v !== cRadius ? cRadius : v));
+        setOverlayScaleFactor((v) => (v !== oScaleFactor ? oScaleFactor : v));
       }
     };
 
@@ -325,6 +385,7 @@ export default function ScrollFrames() {
       style={{
         position: "relative",
         height: "400lvh",
+        marginBottom: `-${CANVAS_SLIDE_DISTANCE_VH}vh`,
       }}
     >
       {/* Fixed navbar wrapper: fade only (no move/scale) */}
@@ -354,18 +415,26 @@ export default function ScrollFrames() {
           display: "block",
           background: "black",
           zIndex: 0,
+          transform: `translateY(${canvasSlideVh}vh) scale(${canvasScale})`,
+          transformOrigin: "center center",
+          borderRadius: `${canvasRadius}px`,
+          willChange: "transform, border-radius",
           pointerEvents: "none",
         }}
       />
-      {/* Hero copy overlay */}
+      {/* Hero copy overlay: fixed initially, then sticky to scroll up at end */}
       <div
-        className="fixed inset-x-0 top-0 z-[150] flex flex-col items-center px-4 sm:px-6 pointer-events-none origin-center"
+        className="inset-x-0 top-0 z-[150] flex flex-col items-center px-4 sm:px-6 pointer-events-none origin-center"
         style={{
+          position: overlayPos === "sticky" ? "sticky" : "fixed",
           paddingTop: "clamp(5rem, 8vw, 9rem)",
           opacity: heroOpacity,
-          transform: `scale(${heroScale})`,
+          transform: `scale(${heroScale * overlayScaleFactor})`,
           transition: "opacity 0.16s linear, transform 0.25s ease-out",
           willChange: "opacity, transform",
+          top: 0,
+          left: 0,
+          right: 0,
         }}
       >
         <h1 className="max-w-[1000px] text-center font-sans leading-tight text-meadow-900 text-xl sm:text-2xl md:text-3xl xl:text-4xl tracking-tight">
@@ -409,7 +478,7 @@ export default function ScrollFrames() {
           </div>
         </div>
       </div>
-      CoverVideo overlay
+      {/* Cover video overlay */}
       {/* <div
         className="fixed inset-0 z-[170] flex items-center justify-center"
         style={{

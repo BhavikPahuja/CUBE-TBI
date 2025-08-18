@@ -1,19 +1,27 @@
 import React from "react";
 import "./components.css";
-import NavBar from "./NavBar.jsx";
+// Removed local NavBar import; common NavBar will be provided by a parent wrapper
+// import NavBar from "./NavBar.jsx";
 import { useState, useEffect, useRef } from "react";
 import scrl1Img from "../media/Scroll-1.avif";
 import scrl2Img from "../media/Scroll-2.avif";
 import scrl3Img from "../media/Scroll-3.avif";
 import scrl4Img from "../media/Scroll-4.avif";
 
+const NAV_HEIGHT = "90px"; // Adjust this value based on your NavBar height
+
 export default function ScrollSection() {
   const sectionRef = useRef(null);
   const [step, setStep] = useState(0);
-  const [partIndex, setPartIndex] = useState(0); // actually current section (0..3)
-  const [sectionIndex, setSectionIndex] = useState(0); // actually current part within section (0..2)
+  const [partIndex, setPartIndex] = useState(0); // 0..3
+  const [sectionIndex, setSectionIndex] = useState(0); // 0..2
   const [scrollProgress, setScrollProgress] = useState(0); // 0..1 across this section
   const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  // End-of-section motion: position and slide progress
+  const [wrapPos, setWrapPos] = useState("fixed"); // fixed → sticky near end
+  const wrapPosRef = useRef("fixed");
+  const [endT, setEndT] = useState(0); // 0..1 during final slide window
 
   const content = [
     {
@@ -82,6 +90,10 @@ export default function ScrollSection() {
     const el = sectionRef.current;
     if (!el) return;
 
+    const PIN_P = 0.99; // switch to sticky ≥ 99%
+    const UNPIN_P = 0.985; // hysteresis
+    const END_START = 0.9; // start upward translation at 90%
+
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
@@ -91,12 +103,31 @@ export default function ScrollSection() {
         const vh = window.innerHeight || 1;
         const totalScrollable = Math.max(rect.height - vh, 1);
         const passed = Math.min(Math.max(-rect.top, 0), totalScrollable);
-        const progress = passed / totalScrollable; // 0..1 across this section
-        const s = Math.min(11, Math.max(0, Math.floor(progress * 12))); // 12 steps (4 sections * 3 parts)
-        setScrollProgress(progress);
+        const p = passed / totalScrollable; // 0..1
+
+        const s = Math.min(11, Math.max(0, Math.floor(p * 12))); // 12 steps
+        setScrollProgress(p);
         setStep(s);
-        setPartIndex(Math.floor(s / 3)); // 0..3 => which section in content
-        setSectionIndex(s % 3); // 0..2 => which part within the section
+        setPartIndex(Math.floor(s / 3));
+        setSectionIndex(s % 3);
+
+        // Local end slide progress using easeInOutSine
+        const denom = Math.max(1e-6, 1 - END_START);
+        const tLinear = Math.max(0, Math.min(1, (p - END_START) / denom));
+        const eased = 0.5 - 0.5 * Math.cos(Math.PI * tLinear);
+        setEndT(eased);
+
+        // Sticky handoff like hero
+        const wantSticky =
+          wrapPosRef.current === "sticky" ? p >= UNPIN_P : p >= PIN_P;
+        if (wantSticky && wrapPosRef.current !== "sticky") {
+          wrapPosRef.current = "sticky";
+          setWrapPos("sticky");
+        } else if (!wantSticky && wrapPosRef.current !== "fixed") {
+          wrapPosRef.current = "fixed";
+          setWrapPos("fixed");
+        }
+
         ticking = false;
       });
     };
@@ -110,12 +141,25 @@ export default function ScrollSection() {
     };
   }, []);
 
+  // Scroll-to-section for tabs and questions
   const handleTabClick = (idx) => {
     const el = sectionRef.current;
     if (!el) return;
     const sectionTop = el.getBoundingClientRect().top + window.scrollY;
     const totalScrollable = Math.max(el.offsetHeight - window.innerHeight, 0);
-    const targetProgress = (idx * 3 + 1 / 2) / 12; // start of that section (3 parts each)
+    const targetProgress = (idx * 3 + 1 / 2) / 12; // center of that tab's section
+    const targetScroll = sectionTop + totalScrollable * targetProgress;
+    window.scrollTo({ top: targetScroll, behavior: "smooth" });
+  };
+
+  const handleQuestionClick = (idx) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const sectionTop = el.getBoundingClientRect().top + window.scrollY;
+    const totalScrollable = Math.max(el.offsetHeight - window.innerHeight, 0);
+    // Each tab has 3 questions, so idx is 0..2 within the current tab
+    const tabIdx = partIndex;
+    const targetProgress = (tabIdx * 3 + idx + 0.5) / 12; // center of that question
     const targetScroll = sectionTop + totalScrollable * targetProgress;
     window.scrollTo({ top: targetScroll, behavior: "smooth" });
   };
@@ -124,50 +168,52 @@ export default function ScrollSection() {
   const qs = [part.info.q1, part.info.q2, part.info.q3];
   const as = [part.info.a1, part.info.a2, part.info.a3];
 
-  // Compute per-section local progress t in [0,1] for a given section index i (0..3)
-  const sectionT = (i) => {
-    const start = i / 4;
-    const span = 1 / 4;
-    const t = (scrollProgress - start) / span;
-    return Math.max(0, Math.min(1, t));
-  };
-
-  // Right pane images and continuous scroll offset (no fading)
+  // Right pane images scrolling
   const images = [scrl1Img, scrl2Img, scrl3Img, scrl4Img];
-  // Move one full viewport per section; clamp so the last image stays in view at the end
   const offsetIndex = Math.max(
     0,
     Math.min(images.length - 1, scrollProgress * images.length)
   );
-  const offsetVh = offsetIndex * 100; // in vh units
+  const offsetVh = offsetIndex * 100;
+
+  // Translate upward at end; no scale/radius
+  const SLIDE_VH = 110;
+  const mirrorTransform =
+    endT > 0
+      ? {
+          transform: `translateY(${-SLIDE_VH * endT}vh)`,
+          transformOrigin: "center top",
+          willChange: "transform",
+        }
+      : {};
 
   return (
     <section
       ref={sectionRef}
       className="relative flex w-full"
-      style={{ height: "1200lvh" }}
+      style={{ height: "1200lvh", marginBottom: `-${SLIDE_VH}vh` }}
     >
       <div
-        className="px-grid-margin pointer-events-none fixed top-0 h-lvh w-full pt-[90px] overflow-hidden"
-        style={{ zIndex: 100 }}
+        className="px-grid-margin pointer-events-none top-0 h-lvh w-full overflow-hidden"
+        style={{
+          position: wrapPos,
+          zIndex: 100,
+          top: NAV_HEIGHT, // offset by NavBar height
+          ...mirrorTransform,
+        }}
       >
-        {/* Pinned navbar inside the section for its full duration */}
-        <div
-          className="absolute top-0 left-0 right-0 bg-[#fdfdf6] border border-transparent border-b-[#0a1d08]/20 shadow-sm"
-          style={{ zIndex: "var(--nav-z-index)" }}
-        >
-          <NavBar />
-        </div>
-        <div className="from-meadow-50 pointer-events-none absolute inset-0 to-transparent bg-gradient-to-r from-40% to-50%" />
         <div className="max-w-grid relative mx-auto flex h-full flex-col text-black">
-          <div className="flex flex-row items-center justify-between">
+          <div
+            className="flex flex-row items-center justify-between"
+            style={{ zIndex: 10, position: "relative" }}
+          >
             <ul
-              className="text-black hover:text-black pointer-events-auto flex items-center gap-2 -ml-2 [&:hover_li]:border-pebble-100 my-4 tablist"
+              className="text-black hover:text-black pointer-events-auto flex items-center gap-2 -ml-2 my-4"
               role="tablist"
             >
               {/* Tab 0 */}
               <li
-                className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer text-black hover:!border-pebble-300 hover:text-black"
+                className="rounded-full border border-transparent p-2 transition-colors duration-300 select-none cursor-pointer text-black hover:!border-pebble-300 hover:text-black hover:border-[rgb(0, 0, 0)]"
                 role="tab"
                 aria-label="Founders"
                 aria-selected={partIndex === 0}
@@ -182,7 +228,7 @@ export default function ScrollSection() {
                 }}
               >
                 <div className="flex items-center">
-                  <div className="relative size-12 shrink-0">
+                  <div className="relative size-10 shrink-0">
                     <div
                       className={`absolute -inset-2 ${
                         partIndex === 0 ? "spin-linear-20" : ""
@@ -219,7 +265,7 @@ export default function ScrollSection() {
                         />
                       </svg>
                     </div>
-                    <div className="atlas-web-sm absolute inset-0 flex items-center justify-center text-center">
+                    <div className="text-xs absolute inset-0 flex items-center justify-center text-center">
                       01
                     </div>
                   </div>
@@ -231,9 +277,9 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Founders</div>
+                      <div className="text-xs">Founders</div>
                       {partIndex === 0 && (
-                        <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
+                        <div className="text-xs text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
                           <span className="whitespace-pre"> / 3</span>
                         </div>
@@ -295,7 +341,7 @@ export default function ScrollSection() {
                 }}
               >
                 <div className="flex items-center">
-                  <div className="relative size-12 shrink-0">
+                  <div className="relative size-10 shrink-0">
                     <div
                       className={`absolute -inset-2 ${
                         partIndex === 1 ? "spin-linear-20" : ""
@@ -318,7 +364,7 @@ export default function ScrollSection() {
                         />
                       </svg>
                     </div>
-                    <div className="atlas-web-sm absolute inset-0 flex items-center justify-center text-center">
+                    <div className="text-xs absolute inset-0 flex items-center justify-center text-center">
                       02
                     </div>
                   </div>
@@ -330,9 +376,9 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Community</div>
+                      <div className="text-xs">Community</div>
                       {partIndex === 1 && (
-                        <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
+                        <div className="text-xs text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
                           <span className="whitespace-pre"> / 3</span>
                         </div>
@@ -394,7 +440,7 @@ export default function ScrollSection() {
                 }}
               >
                 <div className="flex items-center">
-                  <div className="relative size-12 shrink-0">
+                  <div className="relative size-10 shrink-0">
                     <div
                       className={`absolute -inset-2 ${
                         partIndex === 2 ? "spin-linear-20" : ""
@@ -414,7 +460,7 @@ export default function ScrollSection() {
                         />
                       </svg>
                     </div>
-                    <div className="atlas-web-sm absolute inset-0 flex items-center justify-center text-center">
+                    <div className="text-xs absolute inset-0 flex items-center justify-center text-center">
                       03
                     </div>
                   </div>
@@ -426,9 +472,9 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Resources </div>
+                      <div className="text-xs">Resources </div>
                       {partIndex === 2 && (
-                        <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
+                        <div className="text-xs text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
                           <span className="whitespace-pre"> / 3</span>
                         </div>
@@ -490,7 +536,7 @@ export default function ScrollSection() {
                 }}
               >
                 <div className="flex items-center">
-                  <div className="relative size-12 shrink-0">
+                  <div className="relative size-10 shrink-0">
                     <div
                       className={`absolute -inset-2 ${
                         partIndex === 3 ? "spin-linear-20" : ""
@@ -527,7 +573,7 @@ export default function ScrollSection() {
                         />
                       </svg>
                     </div>
-                    <div className="atlas-web-sm absolute inset-0 flex items-center justify-center text-center">
+                    <div className="text-xs absolute inset-0 flex items-center justify-center text-center">
                       04
                     </div>
                   </div>
@@ -539,9 +585,9 @@ export default function ScrollSection() {
                     }}
                   >
                     <div className="relative pl-4">
-                      <div className="atlas-web-sm">Capital</div>
+                      <div className="text-xs">Capital</div>
                       {partIndex === 3 && (
-                        <div className="atlas-web-sm text-black absolute top-0 right-0 text-right">
+                        <div className="text-xs text-black absolute top-0 right-0 text-right">
                           <span>{sectionIndex + 1}</span>
                           <span className="whitespace-pre"> / 3</span>
                         </div>
@@ -619,7 +665,7 @@ export default function ScrollSection() {
               aria-labelledby="tab-:r0:-0"
               id="tabpanel-:r0:-0"
               aria-hidden="false"
-              className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[#0a1d08]"
+              className="absolute left-0 top-0 bottom-30 flex flex-col justify-between text-[#0a1d08]"
               style={{ opacity: 1, visibility: "visible" }}
             >
               <div className="pointer-events-auto flex max-w-[500px] flex-col gap-2 pt-0">
@@ -657,7 +703,13 @@ export default function ScrollSection() {
                         {idx + 1}
                       </div>
                       <div className="flex-1">
-                        <h3 className="atlas-web-sm 2xl:atlas-web-base 2xl:pb-4 pb-3 text-pretty text-black">
+                        <h3
+                          className={`atlas-web-sm 2xl:atlas-web-base 2xl:pb-4 pb-3 text-pretty cursor-pointer ${
+                            isActive ? "text-black" : "text-pebble-400"
+                          }`}
+                          onClick={() => handleQuestionClick(idx)}
+                          title="Jump to this section"
+                        >
                           {qs[idx]}
                         </h3>
                         <div
@@ -668,7 +720,7 @@ export default function ScrollSection() {
                           }`}
                           aria-hidden={!isActive}
                         >
-                          <p className="atlas-web-sm 2xl:atlas-web-base pb-4 text-pretty">
+                          <p className="atlas-web-sm 2xl:atlas-web-base pb-4 text-pretty text-pebble-500">
                             {as[idx]}
                           </p>
                         </div>
@@ -682,11 +734,16 @@ export default function ScrollSection() {
         </div>
       </div>
 
-      {/* RIGHT IMAGE PANE: continuous vertical scroll (no fade), each image covers one section */}
+      {/* RIGHT IMAGE PANE: continuous vertical scroll (no fade) */}
       <div
-        className="pointer-events-none fixed right-0 top-0 flex h-lvh w-[42vw] max-w-[680px] items-center justify-center pr-[var(--grid-margin)] overflow-hidden"
+        className="pointer-events-none right-0 top-0 flex h-lvh w-[42vw] max-w-[680px] items-center justify-center pr-[var(--grid-margin)] overflow-hidden"
         aria-hidden="true"
-        style={{ zIndex: 1 }}
+        style={{
+          position: wrapPos,
+          zIndex: 1,
+          top: NAV_HEIGHT, // offset by NavBar height
+          ...mirrorTransform,
+        }}
       >
         <div className="relative h-lvh w-full">
           <div
@@ -713,10 +770,8 @@ export default function ScrollSection() {
         </div>
       </div>
 
-      {/* Background document flow can remain empty since visuals are fixed */}
-      <div className="invisible" aria-hidden="true">
-        {/* ...kept for layout fallback, no visual output needed */}
-      </div>
+      {/* Background flow placeholder */}
+      <div className="invisible" aria-hidden="true" />
     </section>
   );
 }
