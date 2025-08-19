@@ -3,6 +3,8 @@ import NavBar from "./NavBar.jsx";
 import ScrollSection from "./ScrollSection.jsx";
 import Details from "./Details.jsx";
 import Library from "./Library.jsx";
+import Footer from "./Footer.jsx";
+import BrandGrid from './BrandGrid.jsx'
 
 const NAV_HEIGHT = 90; // keep in sync with NavBar height
 
@@ -85,7 +87,9 @@ const NavPage = () => {
           <ScrollSection />
         )}
         <Details />
+        <BrandGrid />
         <Library />
+        <Footer />
       </div>
     </div>
   );
