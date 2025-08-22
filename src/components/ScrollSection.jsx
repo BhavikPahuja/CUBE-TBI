@@ -208,12 +208,24 @@ export default function ScrollSection() {
             style={{ zIndex: 10, position: "relative" }}
           >
             <ul
-              className="text-black hover:text-black pointer-events-auto flex items-center gap-2 -ml-2 my-4"
+              className="text-black hover:text-black pointer-events-auto flex items-center gap-2 my-4 w-[40%]"
               role="tablist"
             >
-              {/* Tab 0 */}
               <li
-                className="rounded-full border border-transparent p-2 transition-colors duration-300 select-none cursor-pointer text-black hover:!border-pebble-300 hover:text-black hover:border-[rgb(0, 0, 0)]"
+                className={`rounded-full border p-2 transition-colors duration-300 select-none cursor-pointer text-black
+                  ${
+                    partIndex === 0
+                      ? "min-w-[150px] max-w-[200px]"
+                      : "min-w-[130px] max-w-[200px]"
+                  }
+                  ${
+                    hoveredIndex === 0
+                      ? "border-pebble-900"
+                      : hoveredIndex !== null
+                      ? "border-pebble-200"
+                      : "border-transparent"
+                  }
+                `}
                 role="tab"
                 aria-label="Founders"
                 aria-selected={partIndex === 0}
@@ -299,7 +311,7 @@ export default function ScrollSection() {
                             {[0, 1, 2].map((i) => {
                               const local = Math.max(
                                 0,
-                                Math.min(3, scrollProgress * 12 - 0 * 3)
+                                Math.min(3, scrollProgress * 12 - partIndex * 3)
                               );
                               const w =
                                 Math.max(0, Math.min(1, local - i)) * 100;
@@ -308,10 +320,13 @@ export default function ScrollSection() {
                                   className="relative flex h-full basis-full items-center"
                                   key={i}
                                 >
-                                  <div className="bg-pebble-300 h-[1px] basis-full" />
+                                  <div className="bg-pebble-300 h-[2px] basis-full" />
                                   <div
-                                    className="bg-pebble-900 absolute left-0 top-0 h-full progress-fill"
-                                    style={{ width: `${w}%` }}
+                                    className="bg-pebble-900 absolute left-0 top-0 h-[2px] progress-fill"
+                                    style={{
+                                      width: `${w}%`,
+                                      transition: "none",
+                                    }}
                                   />
                                 </div>
                               );
@@ -326,7 +341,20 @@ export default function ScrollSection() {
 
               {/* Tab 1 */}
               <li
-                className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer hover:!border-pebble-300 hover:text-black"
+                className={`rounded-full border p-2 pr-4 transition-colors duration-300 select-none cursor-pointer
+                  ${
+                    partIndex === 1
+                      ? "min-w-[150px] max-w-[200px]"
+                      : "min-w-[130px] max-w-[200px]"
+                  }
+                  ${
+                    hoveredIndex === 1
+                      ? "border-pebble-900"
+                      : hoveredIndex !== null
+                      ? "border-pebble-200"
+                      : "border-transparent"
+                  }
+                `}
                 role="tab"
                 aria-label="Community"
                 aria-selected={partIndex === 1}
@@ -407,10 +435,13 @@ export default function ScrollSection() {
                                   className="relative flex h-full basis-full items-center"
                                   key={i}
                                 >
-                                  <div className="bg-pebble-300 h-[1px] basis-full" />
+                                  <div className="bg-pebble-300 h-[2px] basis-full" />
                                   <div
-                                    className="bg-pebble-900 absolute left-0 top-0 h-full progress-fill"
-                                    style={{ width: `${w}%` }}
+                                    className="bg-pebble-900 absolute left-0 top-0 h-[2px] progress-fill"
+                                    style={{
+                                      width: `${w}%`,
+                                      transition: "none",
+                                    }}
                                   />
                                 </div>
                               );
@@ -425,7 +456,20 @@ export default function ScrollSection() {
 
               {/* Tab 2 */}
               <li
-                className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer hover:!border-pebble-300 hover:text-black"
+                className={`rounded-full border p-2 pr-4 transition-colors duration-300 select-none cursor-pointer
+                  ${
+                    partIndex === 2
+                      ? "min-w-[150px] max-w-[200px]"
+                      : "min-w-[130px] max-w-[200px]"
+                  }
+                  ${
+                    hoveredIndex === 2
+                      ? "border-pebble-900"
+                      : hoveredIndex !== null
+                      ? "border-pebble-200"
+                      : "border-transparent"
+                  }
+                `}
                 role="tab"
                 aria-label="Resources "
                 aria-selected={partIndex === 2}
@@ -503,10 +547,13 @@ export default function ScrollSection() {
                                   className="relative flex h-full basis-full items-center"
                                   key={i}
                                 >
-                                  <div className="bg-pebble-300 h-[1px] basis-full" />
+                                  <div className="bg-pebble-300 h-[2px] basis-full" />
                                   <div
-                                    className="bg-pebble-900 absolute left-0 top-0 h-full progress-fill"
-                                    style={{ width: `${w}%` }}
+                                    className="bg-pebble-900 absolute left-0 top-0 h-[2px] progress-fill"
+                                    style={{
+                                      width: `${w}%`,
+                                      transition: "none",
+                                    }}
                                   />
                                 </div>
                               );
@@ -521,7 +568,20 @@ export default function ScrollSection() {
 
               {/* Tab 3 */}
               <li
-                className="rounded-full border border-transparent p-2 pr-6 transition-colors duration-300 select-none cursor-pointer hover:!border-pebble-300 hover:text-black"
+                className={`rounded-full border p-2 pr-4 transition-colors duration-300 select-none cursor-pointer
+                 ${
+                   partIndex === 3
+                     ? "min-w-[150px] max-w-[200px]"
+                     : "min-w-[130px] max-w-[200px]"
+                 }
+                  ${
+                    hoveredIndex === 3
+                      ? "border-pebble-900"
+                      : hoveredIndex !== null
+                      ? "border-pebble-200"
+                      : "border-transparent"
+                  }
+                `}
                 role="tab"
                 aria-label="Capital"
                 aria-selected={partIndex === 3}
@@ -616,10 +676,13 @@ export default function ScrollSection() {
                                   className="relative flex h-full basis-full items-center"
                                   key={i}
                                 >
-                                  <div className="bg-pebble-300 h-[1px] basis-full" />
+                                  <div className="bg-pebble-300 h-[2px] basis-full" />
                                   <div
-                                    className="bg-pebble-900 absolute left-0 top-0 h-full progress-fill"
-                                    style={{ width: `${w}%` }}
+                                    className="bg-pebble-900 absolute left-0 top-0 h-[2px] progress-fill"
+                                    style={{
+                                      width: `${w}%`,
+                                      transition: "none",
+                                    }}
                                   />
                                 </div>
                               );

@@ -6,12 +6,9 @@ import Footer from "./components/Footer";
 
 const App = () => {
   return (
-    // <div className="App relative bg-[#fdfbf6]">
-    // <Hero />
-    // <NavPage />
-    // </div>
-    <div>
-      <Footer />
+    <div className="App relative bg-[#fdfbf6]">
+      <Hero />
+      <NavPage />
     </div>
   );
 };
