@@ -27,10 +27,10 @@ const VIDEO_START_SCALE = 1.5; // 150% at start
 const VIDEO_END_SCALE = 0.5; // 50% by end of section
 
 // Loading strategy
-const INITIAL_EAGER = 1; // load first N immediately
-const NEIGHBOR_RADIUS = 4; // how many frames on each side to prioritize
-const MAX_CONCURRENCY = 6; // parallel image loads
-const IDLE_BATCH = 8; // load this many per idle cycle (fallback to rAF)
+const INITIAL_EAGER = 1; // load only first frame immediately
+const NEIGHBOR_RADIUS = 2; // only 2 frames on each side
+const MAX_CONCURRENCY = 2; // lower concurrency for faster first paint
+const IDLE_BATCH = 4; // smaller batch size
 
 // Canvas pin thresholds
 const CANVAS_PIN_P = 0.99; // switch to sticky at ≥99%
@@ -127,40 +127,19 @@ export default function ScrollFrames() {
 
   // Initial eager + idle loading
   useEffect(() => {
-    for (let i = 0; i < INITIAL_EAGER && i < TOTAL_FRAMES; i++) enqueue(i);
+    // Only load the first frame immediately
+    enqueue(0);
 
-    const rest = [];
-    for (let i = INITIAL_EAGER; i < TOTAL_FRAMES; i++) rest.push(i);
-
-    const idleLoad = () => {
-      if (!mountedRef.current || rest.length === 0) return;
-      const batch = rest.splice(0, IDLE_BATCH);
-      batch.forEach(enqueue);
-      if (rest.length) {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(idleLoad, { timeout: 150 });
-        } else {
-          requestAnimationFrame(idleLoad);
-        }
-      }
-    };
-
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(idleLoad, { timeout: 150 });
-    } else {
-      requestAnimationFrame(idleLoad);
-    }
+    // Defer all other frames until user scrolls
   }, []);
 
   // ---------- SCROLL → FRAME + UI + CANVAS/OVERLAY MODE ----------
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-
     const clamp01 = (v) => Math.min(1, Math.max(0, v));
     const lerp = (a, b, t) => a + (b - a) * t;
     let ticking = false;
-
     const handleTick = () => {
       const rect = el.getBoundingClientRect();
       const viewport =
@@ -168,12 +147,10 @@ export default function ScrollFrames() {
       const total = Math.max(1, rect.height - viewport);
       const scrolled = Math.min(total, Math.max(0, -rect.top));
       const p = scrolled / total;
-
       // Frame mapping
       const rawIndex = p * (TOTAL_FRAMES - 1);
       targetFrameRef.current = rawIndex;
-
-      // Preload neighbors around target
+      // Preload only neighbors around target (not all at once)
       const center = Math.round(rawIndex);
       for (let d = 0; d <= NEIGHBOR_RADIUS; d++) {
         enqueue(center + d);
@@ -404,24 +381,39 @@ export default function ScrollFrames() {
         <NavBar />
       </div>
       {/* Canvas: fixed initially, becomes sticky only after 99% progress */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: canvasPos === "sticky" ? "sticky" : "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          display: "block",
-          background: "black",
-          zIndex: 0,
-          transform: `translateY(${canvasSlideVh}vh) scale(${canvasScale})`,
-          transformOrigin: "center center",
-          borderRadius: `${canvasRadius}px`,
-          willChange: "transform, border-radius",
-          pointerEvents: "none",
-        }}
-      />
+      <div style={{ position: "relative" }}>
+        {loadedCount === 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "linear-gradient(90deg,#222 0%,#444 100%)",
+              zIndex: 1,
+            }}
+          />
+        )}
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: canvasPos === "sticky" ? "sticky" : "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            display: "block",
+            background: "black",
+            zIndex: 0,
+            transform: `translateY(${canvasSlideVh}vh) scale(${canvasScale})`,
+            transformOrigin: "center center",
+            borderRadius: `${canvasRadius}px`,
+            willChange: "transform, border-radius",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
       {/* Hero copy overlay: fixed initially, then sticky to scroll up at end */}
       <div
         className="inset-x-0 top-0 z-[150] flex flex-col items-center px-4 sm:px-6 pointer-events-none origin-center"
