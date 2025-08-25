@@ -12,7 +12,7 @@ Goals:
 */
 
 const TOTAL_FRAMES = 124;
-const FRAME_PATH = (i) => `/frames/frame_${String(i).padStart(3, "0")}.jpg`;
+const FRAME_PATH = (i) => `/frames/frame_${String(i).padStart(3, "0")}.webp`;
 
 // Scroll UI timings
 const NAV_FADE_END = 0.1;
