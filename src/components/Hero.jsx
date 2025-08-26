@@ -163,13 +163,25 @@ export default function ScrollFrames() {
       // Frame mapping
       const rawIndex = p * (TOTAL_FRAMES - 1);
       targetFrameRef.current = rawIndex;
-      // Preload only neighbors around target (not all at once)
+      // Only keep 11 frames in memory: 5 before, current, 5 after
       const center = Math.round(rawIndex);
-      for (let d = 0; d <= NEIGHBOR_RADIUS; d++) {
-        enqueue(center + d);
-        enqueue(center - d);
+      const start = Math.max(0, center - 5);
+      const end = Math.min(TOTAL_FRAMES - 1, center + 5);
+      // Enqueue only the 11 frames
+      for (let idx = start; idx <= end; idx++) {
+        enqueue(idx);
+      }
+      // Unload frames outside the window
+      for (let idx = 0; idx < TOTAL_FRAMES; idx++) {
+        if (idx < start || idx > end) {
+          if (statusRef.current[idx] === 2) {
+            imagesRef.current[idx] = undefined;
+            statusRef.current[idx] = 0;
+          }
+        }
       }
 
+      // ...existing code for UI updates...
       // Navbar fade
       const nOp = p < NAV_FADE_END ? 1 - p / NAV_FADE_END : 0;
 
