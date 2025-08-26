@@ -15,6 +15,8 @@ const CANVAS_SLIDE_START = 0.9;
 const CANVAS_SLIDE_END = 1.0;
 const CANVAS_SLIDE_DISTANCE_VH = 110;
 
+const VIRTUAL_FRAMES = 240; // smoother scrubbing
+
 export default function ScrollVideo() {
   const sectionRef = useRef(null);
   const videoRef = useRef(null);
@@ -34,6 +36,9 @@ export default function ScrollVideo() {
   const canvasPosRef = useRef("fixed");
   const overlayPosRef = useRef("fixed");
 
+  // keep latest progress for smooth scrubbing loop
+  const scrollProgressRef = useRef(0);
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -46,7 +51,6 @@ export default function ScrollVideo() {
     const el = sectionRef.current;
     if (!el) return;
     const clamp01 = (v) => Math.min(1, Math.max(0, v));
-    const lerp = (a, b, t) => a + (b - a) * t;
 
     let ticking = false;
     const handleTick = () => {
@@ -56,6 +60,8 @@ export default function ScrollVideo() {
       const total = Math.max(1, rect.height - viewport);
       const scrolled = Math.min(total, Math.max(0, -rect.top));
       const p = scrolled / total; // 0 → 1 progress
+
+      scrollProgressRef.current = p; // save progress for video scrubber
 
       // --- Navbar fade
       const nOp = p < NAV_FADE_END ? 1 - p / NAV_FADE_END : 0;
@@ -73,13 +79,6 @@ export default function ScrollVideo() {
         const t = (p - HERO_FADE_START) / (HERO_FADE_END - HERO_FADE_START);
         const eased = t * t * (3 - 2 * t);
         scale = 1 - (1 - HERO_MIN_SCALE) * eased;
-      }
-
-      // --- Video scrubbing
-      if (videoRef.current && videoRef.current.duration > 0) {
-        const duration = videoRef.current.duration;
-        // lock scrubbing between 0 → 97%
-        videoRef.current.currentTime = p * 0.97 * duration;
       }
 
       // --- Canvas (video container) pin logic
@@ -150,6 +149,27 @@ export default function ScrollVideo() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
+  }, []);
+
+  // Smooth video scrubbing loop
+  useEffect(() => {
+    let rafId;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const scrub = () => {
+      if (video.duration > 0) {
+        const progress = scrollProgressRef.current;
+        const frameIndex = Math.floor(progress * VIRTUAL_FRAMES);
+        const newTime = (frameIndex / VIRTUAL_FRAMES) * video.duration * 0.97; // cap at 97%
+        if (Math.abs(video.currentTime - newTime) > 0.03) {
+          video.currentTime = newTime;
+        }
+      }
+      rafId = requestAnimationFrame(scrub);
+    };
+    rafId = requestAnimationFrame(scrub);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   return (
