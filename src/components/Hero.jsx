@@ -126,15 +126,28 @@ export default function ScrollFrames() {
   };
 
   // Initial eager + idle loading
+  const [canLoadFrames, setCanLoadFrames] = useState(false);
   useEffect(() => {
     // Only load the first frame immediately
     enqueue(0);
 
-    // Defer all other frames until user scrolls
+    // Listen for scroll past headline to start loading frames
+    const onScroll = () => {
+      const headline = sectionRef.current?.querySelector("h1");
+      if (!headline) return;
+      const rect = headline.getBoundingClientRect();
+      if (rect.bottom < window.innerHeight * 0.5) {
+        setCanLoadFrames(true);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // ---------- SCROLL → FRAME + UI + CANVAS/OVERLAY MODE ----------
   useEffect(() => {
+    if (!canLoadFrames) return;
+    // Only load frames near current scroll position
     const el = sectionRef.current;
     if (!el) return;
     const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -278,7 +291,7 @@ export default function ScrollFrames() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [canLoadFrames]);
 
   // ---------- CANVAS RENDER LOOP ----------
   useEffect(() => {
@@ -391,6 +404,7 @@ export default function ScrollFrames() {
               width: "100vw",
               height: "100vh",
               background: "linear-gradient(90deg,#222 0%,#444 100%)",
+              filter: "blur(16px)",
               zIndex: 1,
             }}
           />
